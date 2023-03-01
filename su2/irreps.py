@@ -26,9 +26,21 @@ class Irrep(tuple):
             yield Irrep(d, *phi_y)
 
     def __rmul__(self, mul):
-        return Irreps([(mul, self)])
+        return MulIrrep(mul, self)
+    
+class MulIrrep(tuple):
+    def __new__(cls, mul, irrep):
+        return super().__new__(mul, irrep)
     
 class Irreps(tuple):
-    pass
-
-print(Fraction(1, 3)+Fraction(1, 3))
+    def __new__(cls, mulirrep_list):
+        irreps = mulirrep_list
+        if isinstance(mulirrep_list, Irrep):
+            irreps = [MulIrrep(1, mulirrep_list)]
+        return super().__new__(cls, *irreps)
+    
+    def simplify(self):
+        multi = dict()
+        for mul, irrep in self:
+            multi[irrep] = multi.get(irrep, 0) + mul
+        return Irreps([MulIrrep(mul, irrep) for mul, irrep in multi.items()])
